@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Shortener Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f2f5;
+            padding: 20px;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+            color: #1a1a1a;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 0.95em;
+            color: #666;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0e0e0;
+        }
+
+        .card h2 {
+            color: #1a1a1a;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            font-weight: 600;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d0d0d0;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #0066cc;
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+        }
+
+        .btn {
+            background: #0066cc;
+            color: white;
+            padding: 11px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #0052a3;
+        }
+
+        .btn:active {
+            background: #004080;
+        }
+
+        .btn-small {
+            padding: 6px 14px;
+            font-size: 13px;
+            width: auto;
+            margin-left: 5px;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-warning {
+            background: #28a745;
+        }
+
+        .btn-warning:hover {
+            background: #218838;
+        }
+
+        .result {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 4px;
+            display: none;
+            font-size: 0.9em;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .short-url {
+            font-weight: 600;
+            word-break: break-all;
+        }
+
+        #urlList {
+            margin-top: 20px;
+        }
+
+        .url-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            border-left: 3px solid #0066cc;
+        }
+
+        .url-item .alias {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #0066cc;
+            margin-bottom: 8px;
+        }
+
+        .url-item .long-url {
+            color: #666;
+            margin-bottom: 8px;
+            word-break: break-all;
+            font-size: 0.9em;
+        }
+
+        .url-item .stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .stat {
+            background: white;
+            padding: 6px 10px;
+            border-radius: 3px;
+            font-size: 0.85em;
+            border: 1px solid #e0e0e0;
+        }
+
+        .stat strong {
+            color: #0066cc;
+        }
+
+        .ttl-bar {
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .ttl-progress {
+            height: 100%;
+            background: #0066cc;
+            transition: width 1s linear;
+        }
+
+        .actions {
+            margin-top: 10px;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0e0e0;
+        }
+
+        .metric-card .value {
+            font-size: 2em;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .metric-card .label {
+            color: #666;
+            margin-top: 5px;
+            font-size: 0.85em;
+        }
+
+        .access-times {
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .access-times ul {
+            margin-top: 5px;
+            padding-left: 20px;
+        }
+
+        .access-times li {
+            margin: 2px 0;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+            font-size: 0.95em;
+        }
+
+        .complexity-badge {
+            display: inline-block;
+            background: #e8f4f8;
+            color: #0066cc;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.75em;
+            font-weight: 500;
+            margin-left: 8px;
+        }
+
+        .perf-metric {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 8px;
+            border-radius: 3px;
+            margin-top: 8px;
+            font-size: 0.85em;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>URL Shortener Dashboard</h1>
+        </div>
+
+        <div class="metrics">
+            <div class="metric-card">
+                <div class="value" id="totalUrls">0</div>
+                <div class="label">Active URLs</div>
+            </div>
+            <div class="metric-card">
+                <div class="value" id="totalClicks">0</div>
+                <div class="label">Total Redirects</div>
+            </div>
+            <div class="metric-card">
+                <div class="value" id="avgLatency">0ms</div>
+                <div class="label">Avg Latency</div>
+            </div>
+            <div class="metric-card">
+                <div class="value" id="ttlQueue">0</div>
+                <div class="label">TTL Queue Size</div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Create URL -->
+            <div class="card">
+                <h2>Create Shortened URL <span class="complexity-badge">O(1) avg</span></h2>
+                <div class="form-group">
+                    <label>Long URL *</label>
+                    <input type="url" id="longUrl" placeholder="https://example.com/very/long/url" required>
+                </div>
+                <div class="form-group">
+                    <label>Custom Alias (optional)</label>
+                    <input type="text" id="customAlias" placeholder="my-custom-alias">
+                </div>
+                <div class="form-group">
+                    <label>TTL in seconds (default: 120)</label>
+                    <input type="number" id="ttlSeconds" placeholder="120" value="120">
+                </div>
+                <button class="btn" onclick="createShortUrl()">Shorten URL</button>
+                <div id="createResult" class="result"></div>
+            </div>
+
+            <!-- Test Redirect -->
+            <div class="card">
+                <h2>Test Redirect <span class="complexity-badge">O(1)</span></h2>
+                <div class="form-group">
+                    <label>Alias (just the alias part, e.g., "abc123")</label>
+                    <input type="text" id="testAlias" placeholder="abc123">
+                </div>
+                <button class="btn" onclick="testRedirect()">Test Redirect (302)</button>
+                <div id="redirectResult" class="result"></div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Get Analytics -->
+            <div class="card">
+                <h2>URL Analytics <span class="complexity-badge">O(1)</span></h2>
+                <div class="form-group">
+                    <label>Alias (just the alias part, e.g., "abc123")</label>
+                    <input type="text" id="analyticsAlias" placeholder="abc123">
+                </div>
+                <button class="btn" onclick="getAnalytics()">Get Analytics</button>
+                <div id="analyticsResult" class="result"></div>
+            </div>
+
+            <!-- Update URL -->
+            <div class="card">
+                <h2>Update URL <span class="complexity-badge">O(log n)</span></h2>
+                <div class="form-group">
+                    <label>Current Alias</label>
+                    <input type="text" id="updateCurrentAlias" placeholder="current-alias">
+                </div>
+                <div class="form-group">
+                    <label>New Alias (optional)</label>
+                    <input type="text" id="updateNewAlias" placeholder="new-alias">
+                </div>
+                <div class="form-group">
+                    <label>New TTL (optional)</label>
+                    <input type="number" id="updateTtl" placeholder="180">
+                </div>
+                <button class="btn btn-warning" onclick="updateUrl()">Update URL</button>
+                <div id="updateResult" class="result"></div>
+            </div>
+        </div>
+
+        <!-- Active URLs List -->
+        <div class="card">
+            <h2>Active URLs <span style="float: right; font-size: 0.7em; color: #666;">Auto-refreshes every 2s</span></h2>
+            <div id="urlList">
+                <div class="empty-state">No active URLs yet. Create one above!</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+        let activeUrls = [];
+        let performanceMetrics = [];
+
+        // Track performance
+        function trackPerformance(operation, duration) {
+            performanceMetrics.push({ operation, duration, timestamp: Date.now() });
+            if (performanceMetrics.length > 100) performanceMetrics.shift();
+            updateMetrics();
+        }
+
+        // Create shortened URL
+        async function createShortUrl() {
+            const longUrl = document.getElementById('longUrl').value;
+            const customAlias = document.getElementById('customAlias').value;
+            const ttlSeconds = parseInt(document.getElementById('ttlSeconds').value) || 120;
+            const resultDiv = document.getElementById('createResult');
+
+            if (!longUrl) {
+                showResult(resultDiv, 'Please enter a long URL', 'error');
+                return;
+            }
+
+            const body = { long_url: longUrl };
+            if (customAlias) body.custom_alias = customAlias;
+            if (ttlSeconds) body.ttl_seconds = ttlSeconds;
+
+            const start = performance.now();
+            try {
+                const response = await fetch(`${API_BASE}/shorten`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const duration = performance.now() - start;
+                trackPerformance('POST /shorten', duration);
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showResult(resultDiv, `
+                        <div><strong>Short URL:</strong> <span class="short-url">${data.short_url}</span></div>
+                        <div class="perf-metric">Created in ${duration.toFixed(2)}ms (O(1) operation)</div>
+                    `, 'success');
+                    document.getElementById('longUrl').value = '';
+                    document.getElementById('customAlias').value = '';
+                    loadActiveUrls();
+                } else {
+                    showResult(resultDiv, data.error, 'error');
+                }
+            } catch (error) {
+                showResult(resultDiv, 'Failed to create short URL: ' + error.message, 'error');
+            }
+        }
+
+        // Test redirect
+        async function testRedirect() {
+            let alias = document.getElementById('testAlias').value.trim();
+            const resultDiv = document.getElementById('redirectResult');
+
+            if (!alias) {
+                showResult(resultDiv, 'Please enter an alias', 'error');
+                return;
+            }
+
+            // Extract alias from full URL if user pasted the full URL
+            if (alias.includes('/')) {
+                alias = alias.split('/').pop();
+            }
+
+            const start = performance.now();
+            try {
+                const response = await fetch(`${API_BASE}/${alias}`, {
+                    redirect: 'manual'
+                });
+                const duration = performance.now() - start;
+                trackPerformance('GET /:alias', duration);
+
+                if (response.type === 'opaqueredirect' || response.status === 302) {
+                    showResult(resultDiv, `
+                        <div>Redirect working! Status: 302</div>
+                        <div class="perf-metric">Redirected in ${duration.toFixed(2)}ms (O(1) lookup)</div>
+                    `, 'success');
+                    loadActiveUrls();
+                } else if (response.status === 404) {
+                    const data = await response.json();
+                    showResult(resultDiv, data.error, 'error');
+                } else {
+                    showResult(resultDiv, 'Unexpected response', 'error');
+                }
+            } catch (error) {
+                showResult(resultDiv, 'Failed to test redirect: ' + error.message, 'error');
+            }
+        }
+
+        // Get analytics
+        async function getAnalytics() {
+            let alias = document.getElementById('analyticsAlias').value.trim();
+            const resultDiv = document.getElementById('analyticsResult');
+
+            if (!alias) {
+                showResult(resultDiv, 'Please enter an alias', 'error');
+                return;
+            }
+
+            // Extract alias from full URL if user pasted the full URL
+            if (alias.includes('/')) {
+                alias = alias.split('/').pop();
+            }
+
+            const start = performance.now();
+            try {
+                const response = await fetch(`${API_BASE}/analytics/${alias}`);
+                const duration = performance.now() - start;
+                trackPerformance('GET /analytics/:alias', duration);
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const accessList = data.access_times.length > 0
+                        ? `<ul>${data.access_times.map(t => `<li>${new Date(t).toLocaleString()}</li>`).join('')}</ul>`
+                        : '<p>No access times yet</p>';
+
+                    showResult(resultDiv, `
+                        <div><strong>Alias:</strong> ${data.alias}</div>
+                        <div><strong>Long URL:</strong> ${data.long_url}</div>
+                        <div><strong>Access Count:</strong> ${data.access_count}</div>
+                        <div class="access-times">
+                            <strong>Last ${data.access_times.length} accesses (Queue with O(1) operations):</strong>
+                            ${accessList}
+                        </div>
+                        <div class="perf-metric">Retrieved in ${duration.toFixed(2)}ms (O(1) lookup)</div>
+                    `, 'success');
+                } else {
+                    showResult(resultDiv, data.error, 'error');
+                }
+            } catch (error) {
+                showResult(resultDiv, 'Failed to get analytics: ' + error.message, 'error');
+            }
+        }
+
+        // Update URL
+        async function updateUrl() {
+            const currentAlias = document.getElementById('updateCurrentAlias').value;
+            const newAlias = document.getElementById('updateNewAlias').value;
+            const newTtl = document.getElementById('updateTtl').value;
+            const resultDiv = document.getElementById('updateResult');
+
+            if (!currentAlias) {
+                showResult(resultDiv, 'Please enter current alias', 'error');
+                return;
+            }
+
+            const body = {};
+            if (newAlias) body.custom_alias = newAlias;
+            if (newTtl) body.ttl_seconds = parseInt(newTtl);
+
+            const start = performance.now();
+            try {
+                const response = await fetch(`${API_BASE}/update/${currentAlias}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const duration = performance.now() - start;
+                trackPerformance('PUT /update/:alias', duration);
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showResult(resultDiv, `
+                        <div>${data.message}</div>
+                        <div class="perf-metric">Updated in ${duration.toFixed(2)}ms (O(log n) for TTL queue update)</div>
+                    `, 'success');
+                    document.getElementById('updateCurrentAlias').value = '';
+                    document.getElementById('updateNewAlias').value = '';
+                    document.getElementById('updateTtl').value = '';
+                    loadActiveUrls();
+                } else {
+                    showResult(resultDiv, data.error, 'error');
+                }
+            } catch (error) {
+                showResult(resultDiv, 'Failed to update URL: ' + error.message, 'error');
+            }
+        }
+
+        // Delete URL
+        async function deleteUrl(alias) {
+            if (!confirm(`Delete alias "${alias}"?`)) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/delete/${alias}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    loadActiveUrls();
+                } else {
+                    const data = await response.json();
+                    alert('Failed to delete: ' + data.error);
+                }
+            } catch (error) {
+                alert('Failed to delete URL: ' + error.message);
+            }
+        }
+
+        // Load active URLs
+        async function loadActiveUrls() {
+            const urlListDiv = document.getElementById('urlList');
+
+            try {
+                const response = await fetch(`${API_BASE}/list`);
+                const data = await response.json();
+
+                activeUrls = data.urls || [];
+                document.getElementById('ttlQueue').textContent = data.ttl_queue_size || 0;
+
+                if (activeUrls.length === 0) {
+                    urlListDiv.innerHTML = '<div class="empty-state">No active URLs yet. Create one above!</div>';
+                    updateMetrics();
+                    return;
+                }
+
+                urlListDiv.innerHTML = activeUrls.map(url => {
+                    const accessTimesList = url.access_times.length > 0
+                        ? `<ul>${url.access_times.slice(0, 5).map(t => `<li>${new Date(t).toLocaleString()}</li>`).join('')}</ul>`
+                        : '<p>No accesses yet</p>';
+
+                    const ttlPercentage = (url.time_remaining / url.ttl) * 100;
+                    const ttlColor = ttlPercentage > 50 ? '#0066cc' : ttlPercentage > 20 ? '#ffc107' : '#dc3545';
+
+                    return `
+                        <div class="url-item">
+                            <div class="alias">/${url.alias}</div>
+                            <div class="long-url">${url.long_url}</div>
+                            <div class="stats">
+                                <span class="stat"><strong>${url.access_count}</strong> redirects</span>
+                                <span class="stat"><strong>${url.access_times.length}</strong> tracked times</span>
+                                <span class="stat"><strong>${url.time_remaining}s</strong> remaining</span>
+                                <span class="stat">TTL: <strong>${url.ttl}s</strong></span>
+                            </div>
+                            <div class="ttl-bar">
+                                <div class="ttl-progress" style="width: ${ttlPercentage}%; background: ${ttlColor};"></div>
+                            </div>
+                            <div class="access-times">
+                                <strong>Recent accesses (Queue - O(1) operations):</strong>
+                                ${accessTimesList}
+                            </div>
+                            <div class="actions">
+                                <button class="btn btn-small" onclick="copyToClipboard('${url.alias}')">Copy Link</button>
+                                <button class="btn btn-small btn-danger" onclick="deleteUrl('${url.alias}')">Delete</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                updateMetrics();
+            } catch (error) {
+                urlListDiv.innerHTML = '<div class="empty-state">Failed to load URLs</div>';
+            }
+        }
+
+        // Update metrics
+        function updateMetrics() {
+            const totalClicks = activeUrls.reduce((sum, url) => sum + (url.access_count || 0), 0);
+            const avgLatency = performanceMetrics.length > 0
+                ? (performanceMetrics.reduce((sum, m) => sum + m.duration, 0) / performanceMetrics.length).toFixed(2)
+                : 0;
+
+            document.getElementById('totalUrls').textContent = activeUrls.length;
+            document.getElementById('totalClicks').textContent = totalClicks;
+            document.getElementById('avgLatency').textContent = avgLatency + 'ms';
+        }
+
+        // Copy to clipboard
+        function copyToClipboard(alias) {
+            const url = `${API_BASE}/${alias}`;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Link copied to clipboard!');
+            });
+        }
+
+        // Show result helper
+        function showResult(element, message, type) {
+            element.className = `result ${type}`;
+            element.innerHTML = message;
+            element.style.display = 'block';
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 10000);
+        }
+
+        // Auto-refresh
+        setInterval(loadActiveUrls, 2000);
+        loadActiveUrls();
+    </script>
+</body>
+</html>
